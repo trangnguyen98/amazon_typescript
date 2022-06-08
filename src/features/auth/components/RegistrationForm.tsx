@@ -9,16 +9,45 @@ import {
 import { Form, Formik } from "formik";
 import React from "react";
 import { Link } from "react-router-dom";
-// import { MessageFormatElement } from "react-intl";
+import { MessageFormatElement } from "react-intl";
 import { FORM_REGISTER } from "../../../common/contants/form.constant";
 import { BoxWrapper, ButtonWrapper, RegisterFormWrapper } from "./styled";
+import yup from "libs/yup";
 
 const RegistrationForm: React.FC = () => {
   // const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
   //   console.log("clicked");
   // };
-  // const validateSchema = (messages: Record<string, string | Record<string, MessageFormatElement[]> )
-
+  const validationSchema = (
+    messages: Record<string, string> | Record<string, MessageFormatElement[]>
+  ) =>
+    yup.object().shape({
+      email: yup
+        .string()
+        .trim()
+        .required(messages["forms.error.email.required"].toString())
+        .matches(
+          // eslint-disable-next-line no-useless-escape
+          /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{1,}))$/,
+          messages["forms.error.email.valid"].toString()
+        ),
+      password: yup
+        .string()
+        .required(messages["forms.error.password.required"].toString())
+        .min(8, messages["forms.error.password.min"].toString())
+        .max(50, messages["forms.error.password.max"].toString())
+        .matches(
+          /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
+          messages["forms.error.password.regex"].toString()
+        ),
+      passwordConfirm: yup
+        .string()
+        .required(messages["forms.error.password_confirm.required"].toString())
+        .oneOf(
+          [yup.ref("password")],
+          messages["forms.error.passwordConfirm.match"].toString()
+        ),
+    });
   return (
     <RegisterFormWrapper>
       <Formik
@@ -29,6 +58,7 @@ const RegistrationForm: React.FC = () => {
             setSubmitting(false);
           }, 400);
         }}
+        validationSchema={validationSchema(messages)}
       >
         {(formikProps) => {
           const { values, errors, touched } = formikProps;
